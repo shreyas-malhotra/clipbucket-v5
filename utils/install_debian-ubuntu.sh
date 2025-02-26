@@ -264,7 +264,7 @@ echo -ne "Installing ClipbucketV5 sources..."
 SERVER_ROOT="/srv/http/"
 INSTALL_PATH="${SERVER_ROOT}clipbucket/"
 mkdir -p ${INSTALL_PATH}
-git clone https://github.com/MacWarrior/clipbucket-v5.git ${INSTALL_PATH} > /dev/null 2>&1
+git clone https://github.com/shreyas-malhotra/clipbucket-v5.git ${INSTALL_PATH} > /dev/null 2>&1
 git config --global core.fileMode false
 git config --global --add safe.directory ${INSTALL_PATH}
 echo -ne " OK"
