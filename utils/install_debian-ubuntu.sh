@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $EUID -ne 0 ]]; then
-    echo "ClipBucketV5 easy installation script must be run as root"
+    echo "ClipBucketV5 (forked for vuln lab setup) easy installation script must be run as root"
     exit
 fi
 
@@ -13,7 +13,7 @@ echo "| |   | | | '_ \|  _ \| | | |/ __| |/ / _ \ __\ \ / /|___ \\"
 echo "| |___| | | |_) | |_) | |_| | (__|   <  __/ |_ \ V /  ___) |"
 echo " \____|_|_| .__/|____/ \__,_|\___|_|\_\___|\__| \_/  |____/"
 echo "          |_|            Installation script for"
-echo "                    Debian 9-12 & Ubuntu 16.04-24.04"
+echo "                              Ubuntu 24.04"
 echo ""
 echo "Disclaimer : This easy installation script is only"
 echo "             made to configure local / dev environments."
@@ -26,134 +26,16 @@ apt update > /dev/null 2>&1
 apt dist-upgrade -y > /dev/null 2>&1
 echo -ne " OK"
 
+HTTP_SERVER="NGINX"
 echo ""
-echo ""
-echo "HTTP servers availables : "
-echo " - Nginx [Default]"
-echo " - Apache"
-read -p "Which HTTP server do you want to use ? [Nginx] " READ_HTTP_SERVER
-case ${READ_HTTP_SERVER} in
-    "Apache")
-        HTTP_SERVER="APACHE"
-        echo ""
-        echo -ne "Installing Apache..."
-        apt install apache2 --yes > /dev/null 2>&1
-        ;;
-    *)
-        HTTP_SERVER="NGINX"
-        echo ""
-        echo -ne "Installing Nginx..."
-        apt install nginx-full --yes > /dev/null 2>&1
-        ;;
-esac
+echo -ne "Installing Nginx..."
+apt install nginx-full --yes > /dev/null 2>&1
 echo -ne " OK"
 
-case ${OS} in
-    "DEBIAN9")
-        PHP_VERSION="7.0"
-        ;;
-
-    "DEBIAN10")
-        echo ""
-        echo ""
-        echo "PHP versions availables : "
-        echo " - 7.3 [Default]"
-        echo " - 7.4"
-        echo " - 8.0"
-        echo " - 8.1"
-        echo " - 8.2"
-        echo " - 8.3"
-        read -p "Which PHP version do you want to use ? [7.3] " READ_PHP_VERSION
-        case ${READ_PHP_VERSION} in
-            "7.4"|"8.0"|"8.1"|"8.2"|"8.3")
-                echo ""
-                echo -ne "Configuring PHP ${READ_PHP_VERSION} repo..."
-                apt install apt-transport-https lsb-release ca-certificates curl wget gnupg2 --yes > /dev/null 2>&1
-                wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg > /dev/null 2>&1
-                echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/php.list
-                apt update > /dev/null 2>&1
-                echo -ne " OK"
-                PHP_VERSION=${READ_PHP_VERSION}
-                ;;
-            "7.3"|*)
-                PHP_VERSION="7.3"
-                ;;
-        esac
-        ;;
-
-    "DEBIAN11")
-        echo ""
-        echo ""
-        echo "PHP versions availables : "
-        echo " - 7.4 [Default]"
-        echo " - 8.0"
-        echo " - 8.1"
-        echo " - 8.2"
-        echo " - 8.3"
-        read -p "Which PHP version do you want to use ? [7.4] " READ_PHP_VERSION
-        case ${READ_PHP_VERSION} in
-            "8.0"|"8.1"|"8.2"|"8.3")
-                echo ""
-                echo -ne "Configuring PHP ${READ_PHP_VERSION} repo..."
-                apt install apt-transport-https lsb-release ca-certificates curl wget gnupg2 --yes > /dev/null 2>&1
-                wget -qO- https://packages.sury.org/php/apt.gpg | gpg --dearmor > /etc/apt/trusted.gpg.d/sury-php-x.x.gpg
-                echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
-                apt update > /dev/null 2>&1
-                echo -ne " OK"
-                PHP_VERSION=${READ_PHP_VERSION}
-                ;;
-            "7.4"|*)
-                PHP_VERSION="7.4"
-                ;;
-        esac
-        ;;
-
-    "DEBIAN12")
-        echo ""
-        echo ""
-        echo "PHP versions availables : "
-        echo " - 8.2 [Default]"
-        echo " - 8.3"
-        read -p "Which PHP version do you want to use ? [8.2] " READ_PHP_VERSION
-        case ${READ_PHP_VERSION} in
-            "8.3")
-                echo ""
-                echo -ne "Configuring PHP ${READ_PHP_VERSION} repo..."
-                apt install apt-transport-https lsb-release ca-certificates curl wget gnupg2 --yes > /dev/null 2>&1
-                wget -qO- https://packages.sury.org/php/apt.gpg | gpg --dearmor > /etc/apt/trusted.gpg.d/sury-php-x.x.gpg
-                echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
-                apt update > /dev/null 2>&1
-                echo -ne " OK"
-                PHP_VERSION=${READ_PHP_VERSION}
-                ;;
-            "8.2"|*)
-                PHP_VERSION="8.2"
-                ;;
-        esac
-        ;;
-
-    "UBUNTU1604")
-        PHP_VERSION="7.0"
-        ;;
-    "UBUNTU1804")
-        PHP_VERSION="7.2"
-        ;;
-    "UBUNTU2004")
-        PHP_VERSION="7.4"
-        ;;
-    "UBUNTU2304"|"UBUNTU2204")
-        PHP_VERSION="8.1"
-        ;;
-    "UBUNTU2310")
-        PHP_VERSION="8.2"
-        ;;
-    "UBUNTU2404")
-        PHP_VERSION="8.3"
-        ;;
-esac
+PHP_VERSION="8.3"
 
 echo ""
-echo -ne "Installing requiered elements..."
+echo -ne "Installing required elements..."
 apt install php${PHP_VERSION}-fpm mariadb-server git php${PHP_VERSION}-curl ffmpeg php${PHP_VERSION}-mysqli php${PHP_VERSION}-xml php${PHP_VERSION}-mbstring php${PHP_VERSION}-gd sendmail mediainfo --yes > /dev/null 2>&1
 echo -ne " OK"
 
@@ -165,7 +47,7 @@ systemctl restart php${PHP_VERSION}-fpm
 echo -ne " OK"
 
 echo ""
-echo -ne "Installing ClipbucketV5 sources..."
+echo -ne "Installing unofficial ClipbucketV5 (forked by shreyas-malhotra) sources..."
 SERVER_ROOT="/srv/http/"
 INSTALL_PATH="${SERVER_ROOT}clipbucket/"
 mkdir -p ${INSTALL_PATH}
@@ -410,14 +292,7 @@ sed -i "s/DOMAINNAME/${DOMAIN_NAME}/g" ${VHOST_PATH}
 sed -i "s/PHPVERSION/${PHP_VERSION}/g" ${VHOST_PATH}
 sed -i "s/INSTALLPATH/${INSTALL_PATH//\//\\/}upload/g" ${VHOST_PATH}
 
-case ${HTTP_SERVER} in
-    "NGINX")
-      systemctl restart nginx > /dev/null
-      ;;
-    "APACHE")
-      systemctl restart apache2 > /dev/null
-      ;;
-esac
+systemctl restart nginx > /dev/null
 echo -ne " OK"
 
 echo ""
