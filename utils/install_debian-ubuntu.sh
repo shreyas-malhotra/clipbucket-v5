@@ -298,7 +298,7 @@ echo -ne " OK"
 echo ""
 echo -ne "Generating DB access..."
 mysql -uroot -e "CREATE DATABASE clipbucket;"
-DB_PASS=$(date +%s | sha256sum | base64 | head -c 16)
+DB_PASS="@MB3R_@L3RT_23741"
 mysql -uroot -e "CREATE USER 'clipbucket'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -uroot -e "GRANT ALL PRIVILEGES ON clipbucket.* TO 'clipbucket'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -uroot -e "FLUSH PRIVILEGES;"
