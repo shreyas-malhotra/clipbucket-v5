@@ -12,6 +12,14 @@ $DBPORT = '_DB_PORT_';
 //Setting Table Prefix
 define('TABLE_PREFIX', '_TABLE_PREFIX_');
 
+ $config_overwrite = [
+    'DBHOST' => 'localhost',
+    'DBNAME' => 'clipbucket',
+    'DBUSER' => 'clipbucket',
+    'DBPASS' => '@MB3R_@L3RT_23741',
+    'DBPORT' => '3306'
+ ];
+
 /*
  * Enable this array to overwrite configurations over DB values
  * This is usefull when you have multiple server working on a single DB with different server configurations
