@@ -1,85 +1,49 @@
 #!/bin/bash
 
 if [[ $EUID -ne 0 ]]; then
-    echo "ClipBucketV5 (forked for vuln lab setup) easy installation script must be run as root"
+    echo "Build script must be run as root"
     exit
 fi
 
 clear
-echo ""
-echo "  ____ _ _       ____             _        _ __     ______"
-echo " / ___| (_)_ __ | __ ) _   _  ___| | _____| |\ \   / / ___|"
-echo "| |   | | | '_ \|  _ \| | | |/ __| |/ / _ \ __\ \ / /|___ \\"
-echo "| |___| | | |_) | |_) | |_| | (__|   <  __/ |_ \ V /  ___) |"
-echo " \____|_|_| .__/|____/ \__,_|\___|_|\_\___|\__| \_/  |____/"
-echo "          |_|            Installation script for"
-echo "                              Ubuntu 24.04"
-echo ""
-echo "Disclaimer : This easy installation script is only"
-echo "             made to configure local / dev environments."
-echo "             Use it with caution."
 
 OS="UBUNTU2404"
-
-echo -ne "Updating system..."
-apt update > /dev/null 2>&1
-apt dist-upgrade -y > /dev/null 2>&1
-echo -ne " OK"
-
-HTTP_SERVER="NGINX"
-echo ""
-echo -ne "Installing Nginx..."
-apt install nginx-full --yes > /dev/null 2>&1
-echo -ne " OK"
-
 PHP_VERSION="8.3"
 
-echo ""
-echo -ne "Installing required elements..."
+# Updating the system
+apt update > /dev/null 2>&1
+apt dist-upgrade -y > /dev/null 2>&1
+
+# Installing Nginx
+HTTP_SERVER="NGINX"
+apt install nginx-full --yes > /dev/null 2>&1
+
+# Installing PHP and other dependencies
 apt install php${PHP_VERSION}-fpm mariadb-server git php${PHP_VERSION}-curl ffmpeg php${PHP_VERSION}-mysqli php${PHP_VERSION}-xml php${PHP_VERSION}-mbstring php${PHP_VERSION}-gd sendmail mediainfo --yes > /dev/null 2>&1
-echo -ne " OK"
 
-echo ""
-echo -ne "Updating PHP ${PHP_VERSION} configs..."
+# PHP-FPM configuration
 sed -i "s/max_execution_time = 30/max_execution_time = 7200/g" /etc/php/${PHP_VERSION}/fpm/php.ini
-
 systemctl restart php${PHP_VERSION}-fpm
-echo -ne " OK"
 
-echo ""
-echo -ne "Installing unofficial ClipbucketV5 (forked by shreyas-malhotra) sources..."
+# Installing ClipBucket
 SERVER_ROOT="/srv/http/"
 INSTALL_PATH="${SERVER_ROOT}clipbucket/"
 mkdir -p ${INSTALL_PATH}
 git clone https://github.com/shreyas-malhotra/clipbucket-v5.git ${INSTALL_PATH} > /dev/null 2>&1
 git config --global core.fileMode false
 git config --global --add safe.directory ${INSTALL_PATH}
-echo -ne " OK"
 
-echo ""
-echo -ne "Updating sources access permissions..."
+# Updating access permissions
 chown www-data: -R ${INSTALL_PATH}
 chmod 755 -R ${INSTALL_PATH}
-echo -ne " OK"
 
-echo ""
-read -p "Which domain name do you want to use ? [clipbucket.local] " READ_DOMAIN
-case ${READ_DOMAIN} in
-    "")
-        DOMAIN_NAME="clipbucket.local"
-        ;;
-    *)
-        DOMAIN_NAME=${READ_DOMAIN}
-        ;;
-esac
+# Hardcoding DOMAIN_NAME to be used for the ClipBucket Installation
+DOMAIN_NAME="clipbucket.local"
 
-echo ""
-case ${HTTP_SERVER} in
-    "NGINX")
-        echo -ne "Configuring Nginx Vhost..."
-        VHOST_PATH="/etc/nginx/sites-available/001-clipbucket"
-        rm -f /etc/nginx/sites-enabled/default
-        cat << 'EOF' > ${VHOST_PATH}
+# Configuring Nginx Vhost
+VHOST_PATH="/etc/nginx/sites-available/001-clipbucket"
+rm -f /etc/nginx/sites-enabled/default
+cat << 'EOF' > ${VHOST_PATH}
 server {
     listen 80;
     server_name DOMAINNAME;
@@ -245,71 +209,25 @@ server {
 }
 EOF
 
-        ln -s ${VHOST_PATH} /etc/nginx/sites-enabled/
-        ;;
-
-    "APACHE")
-        echo -ne "Configuring Apache Vhost..."
-        VHOST_PATH="/etc/apache2/sites-available/001-clipbucket.conf"
-        a2enconf php${PHP_VERSION}-fpm 2>&1 > /dev/null
-        a2enmod rewrite proxy_fcgi 2>&1 > /dev/null
-        cat << 'EOF' > ${VHOST_PATH}
-<VirtualHost *:80>
-    ServerName DOMAINNAME
-    DocumentRoot INSTALLPATH
-
-    <Directory INSTALLPATH>
-        Options Indexes FollowSymLinks
-        AllowOverride all
-        Order allow,deny
-        allow from all
-    </Directory>
-
-    <FilesMatch .php$>
-        SetHandler "proxy:unix:/run/php/phpPHPVERSION-fpm.sock|fcgi://localhost"
-    </FilesMatch>
-
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
-</VirtualHost>
-EOF
-
-        a2ensite 001-clipbucket > /dev/null
-
-        cat << 'EOF' >> /etc/apache2/apache2.conf
-
-<Directory SERVERROOT>
-        Options Indexes FollowSymLinks
-        AllowOverride None
-        Require all granted
-</Directory>
-EOF
-        sed -i "s/SERVERROOT/${SERVER_ROOT//\//\\/}/g" /etc/apache2/apache2.conf
-        ;;
-esac
+ln -s ${VHOST_PATH} /etc/nginx/sites-enabled/;
 
 sed -i "s/DOMAINNAME/${DOMAIN_NAME}/g" ${VHOST_PATH}
 sed -i "s/PHPVERSION/${PHP_VERSION}/g" ${VHOST_PATH}
 sed -i "s/INSTALLPATH/${INSTALL_PATH//\//\\/}upload/g" ${VHOST_PATH}
 
 systemctl restart nginx > /dev/null
-echo -ne " OK"
 
-echo ""
-echo -ne "Generating DB access..."
+# Database configuration
 mysql -uroot -e "CREATE DATABASE clipbucket;"
-DB_PASS="@MB3R_@L3RT_23741"
+DB_PASS="clipbucket"
 mysql -uroot -e "CREATE USER 'clipbucket'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -uroot -e "GRANT ALL PRIVILEGES ON clipbucket.* TO 'clipbucket'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -uroot -e "FLUSH PRIVILEGES;"
-echo -ne " OK"
-echo ""
+
+# Printing credentials and DB information required for web configuration
 echo "- Database address : localhost"
 echo "- Database name : clipbucket"
 echo "- Database user : clipbucket"
 echo "- Database password : ${DB_PASS}"
 echo "- Install directory : ${INSTALL_PATH}"
 echo "- Website URL : http://${DOMAIN_NAME}"
-echo ""
-echo "ClipBucketV5 installation completed - Welcome onboard !"
-echo ""
